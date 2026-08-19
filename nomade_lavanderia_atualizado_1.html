@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Nômade Lav">
+<meta name="theme-color" content="#41828E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Nômade Lavanderia</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;background:#F7F7F5;color:#1A1A17;}
+
+/* LOADING */
+#loading-screen{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#loading-screen img{height:40px;width:auto;}
+.spinner{width:28px;height:28px;border:3px solid #E3E3DE;border-top-color:#41828E;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:#888;}
+
+/* APP WRAPPER - scrollable */
+#app{
+  max-width:430px;
+  margin:0 auto;
+  height:100%;
+  height:100dvh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  background:#F7F7F5;
+  position:relative;
+}
+
+/* CSS VARIABLES */
+:root{
+  --green:#0F6E56;--gl:#E1F5EE;--gm:#c8ede3;
+  --blue:#185FA5;--bl:#E6F1FB;
+  --red:#A32D2D;--rl:#FCEBEB;
+  --yellow:#854F0B;--yl:#FAEEDA;
+  --bg:#F7F7F5;--bg2:#EFEFEC;--surface:#fff;
+  --border:#E3E3DE;--border2:#D0D0C8;
+  --text:#1A1A17;--text2:#6B6B63;--text3:#9B9B90;
+  --r:10px;--rl2:14px;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+
+/* HEADER */
+.hdr{padding:16px 16px 0;background:var(--bg);position:sticky;top:0;z-index:20;border-bottom:1px solid var(--border);}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.logo{font-size:15px;font-weight:600;letter-spacing:-.02em;}
+.logo em{color:var(--green);font-style:normal;}
+.back-btn{font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;font-family:var(--font);}
+.nav{display:flex;background:var(--bg2);border-radius:var(--r) var(--r) 0 0;overflow:hidden;border:1px solid var(--border);border-bottom:none;}
+.nav-btn{flex:1;padding:9px 4px;font-size:12px;font-weight:500;font-family:var(--font);background:transparent;border:none;cursor:pointer;color:var(--text2);}
+.nav-btn.active{background:var(--green);color:#fff;}
+
+/* UNIT TABS */
+.unit-tabs{display:flex;gap:6px;margin-bottom:12px;}
+.unit-tab{flex:1;padding:8px 6px;font-size:12px;font-weight:500;font-family:var(--font);border:1px solid var(--border);border-radius:var(--r);background:var(--surface);cursor:pointer;color:var(--text2);text-align:center;position:relative;}
+.unit-tab.active{border-color:var(--green);color:var(--green);background:var(--gl);}
+.unit-tab.confirmed-tab{border-color:var(--green);}
+.unit-tab .ck{font-size:9px;color:var(--green);margin-left:3px;}
+
+/* SECTIONS */
+.sec{padding:14px 16px;}
+.sec-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:500;}
+
+/* ITEM ROWS */
+.item-row{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:5px;}
+.item-row.has-v{border-color:var(--gm);}
+.item-row.has-diff{border-color:var(--red);background:var(--rl);}
+.item-row.has-match{border-color:var(--green);}
+.item-info{flex:1;min-width:0;}
+.item-name{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-price{font-size:11px;color:var(--text3);margin-top:1px;}
+.counter{display:flex;align-items:center;gap:4px;}
+.cbtn{width:30px;height:30px;border:1px solid var(--border2);border-radius:8px;background:var(--bg);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);flex-shrink:0;font-family:var(--font);}
+.cbtn.plus{border-color:var(--green);color:var(--green);background:var(--gl);}
+.cval{font-size:14px;font-weight:600;min-width:28px;text-align:center;color:var(--text);}
+.cval.nz{color:var(--green);}
+
+/* DUAL COLUMN */
+.dual-row{display:flex;align-items:stretch;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:5px;overflow:hidden;}
+.dual-row.diff{border-color:var(--red);}
+.dual-row.match{border-color:var(--gm);}
+.dual-info{padding:8px 10px;min-width:0;flex:1.4;}
+.dual-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dual-price{font-size:10px;color:var(--text3);}
+.dual-col{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 6px;min-width:48px;border-left:1px solid var(--border);}
+.dual-col-label{font-size:9px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:3px;}
+.dual-col-label.nl{color:var(--green);}
+.dual-col-label.fl{color:var(--blue);}
+.dual-col-val{font-size:15px;font-weight:600;}
+.dual-col-val.nv{color:var(--green);}
+.dual-col-val.fv{color:var(--blue);}
+.dual-col-val.zero{color:var(--text3);font-weight:400;}
+.dual-status{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 8px;border-left:1px solid var(--border);min-width:32px;}
+.dot-ok{width:10px;height:10px;border-radius:50%;background:var(--green);}
+.dot-diff{width:10px;height:10px;border-radius:50%;background:var(--red);}
+.dot-empty{width:10px;height:10px;border-radius:50%;background:var(--border2);}
+
+/* BADGES */
+.badge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;flex-shrink:0;font-family:var(--mono);}
+.b-ok{background:var(--gl);color:var(--green);}
+.b-warn{background:var(--rl);color:var(--red);}
+.b-n{background:var(--gl);color:var(--green);}
+.b-f{background:var(--bl);color:var(--blue);}
+.b-pend{background:var(--yl);color:var(--yellow);}
+
+/* TOTALS */
+.totals-card{margin:0 16px 12px;background:var(--surface);border-radius:var(--rl2);padding:14px;border:1px solid var(--border);}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.titem label{font-size:10px;color:var(--text3);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.titem .val{font-size:18px;font-weight:600;color:var(--text);letter-spacing:-.02em;}
+.titem .val.money{color:var(--green);}
+
+/* ALERTS */
+.alert{margin:0 16px 10px;padding:9px 12px;border-radius:var(--r);font-size:12px;font-weight:500;}
+.a-ok{background:var(--gl);color:var(--green);}
+.a-warn{background:var(--rl);color:var(--red);}
+
+/* FOOTER - fixed at bottom of #app */
+.footer{
+  position:sticky;
+  bottom:0;
+  left:0;
+  right:0;
+  padding:10px 16px 20px;
+  background:var(--bg);
+  border-top:1px solid var(--border);
+  z-index:10;
+}
+.btn-p{width:100%;padding:13px;background:var(--green);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;}
+.btn-p:disabled{opacity:.35;cursor:default;}
+.wa-btn{width:100%;padding:13px;background:#25D366;color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:56px 24px;color:var(--text2);font-size:14px;}
+.empty .icon{font-size:40px;margin-bottom:14px;}
+.empty strong{display:block;color:var(--text);font-weight:500;margin-bottom:4px;}
+
+/* HIST CARDS */
+.hist-card{margin:0 16px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl2);padding:12px 14px;cursor:pointer;}
+.hist-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.hist-title{font-size:14px;font-weight:500;color:var(--text);letter-spacing:-.01em;}
+.hist-sub{font-size:12px;color:var(--text2);display:flex;justify-content:space-between;align-items:center;}
+.pill{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:500;font-family:var(--mono);}
+.p-pend{background:var(--yl);color:var(--yellow);}
+.p-ok{background:var(--gl);color:var(--green);}
+.p-div{background:var(--rl);color:var(--red);}
+
+/* CONFIRM BOX */
+.confirm-box{margin:0 16px 12px;border:1px solid var(--border);border-radius:var(--rl2);overflow:hidden;}
+.confirm-side{padding:12px 14px;background:var(--surface);}
+.confirm-side.done{background:var(--gl);}
+.confirm-divider{height:1px;background:var(--border);}
+.confirm-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:4px;font-weight:500;}
+.confirm-name{font-size:14px;font-weight:500;color:var(--text);}
+.confirm-check{font-size:11px;color:var(--green);margin-top:2px;}
+.confirm-btn{font-size:12px;font-weight:500;font-family:var(--font);background:none;border:1px solid;border-radius:8px;padding:5px 12px;cursor:pointer;margin-top:6px;}
+.cb-n{color:var(--green);border-color:var(--green);}
+.cb-f{color:var(--blue);border-color:var(--blue);}
+
+/* LOCKED BAR */
+.locked-bar{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--gl);border:1px solid var(--gm);border-radius:var(--r);margin-bottom:10px;font-size:12px;color:var(--green);font-weight:500;}
+.edit-btn{margin-left:auto;font-size:11px;color:var(--green);background:rgba(15,110,86,.1);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:var(--font);font-weight:500;}
+
+/* MODAL */
+.modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:100;backdrop-filter:blur(2px);}
+.modal{background:var(--surface);border-radius:var(--rl2) var(--rl2) 0 0;padding:20px 16px 32px;width:100%;max-width:430px;animation:slideUp .2s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h3{font-size:17px;font-weight:600;margin-bottom:8px;letter-spacing:-.02em;}
+.modal p{font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.55;}
+.mactions{display:flex;gap:8px;}
+.mactions button{flex:1;padding:11px;border-radius:var(--r);font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text);}
+.mactions .btn-confirm{background:var(--green);color:#fff;border-color:var(--green);}
+.mactions .btn-warn{background:var(--red);color:#fff;border-color:var(--red);}
+.input-field{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:14px;font-family:var(--font);color:var(--text);background:var(--bg);margin-top:6px;outline:none;}
+select.input-field{appearance:none;cursor:pointer;}
+.form-label{font-size:12px;color:var(--text2);display:block;margin-top:14px;font-weight:500;}
+.form-label:first-child{margin-top:0;}
+
+/* MISC */
+.spacer{height:12px;}
+.meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:0 2px;}
+.meta-text{font-size:11px;color:var(--text3);}
+.quinz-header{margin:0 16px 10px;display:flex;align-items:center;justify-content:space-between;}
+.quinz-title{font-size:14px;font-weight:600;color:var(--text);}
+.quinz-val{font-size:14px;font-weight:600;color:var(--green);}
+.col-headers{display:flex;gap:0;margin-bottom:6px;padding:0 2px;}
+.col-h{flex:1;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:center;color:var(--text3);}
+.col-h.nh{color:var(--green);}
+.col-h.fh{color:var(--blue);}
+
+/* HUB CARDS */
+.hub-card{display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;cursor:pointer;}
+.hub-card.disabled{opacity:.45;cursor:default;}
+.hub-card.forn-card{border-color:var(--blue);background:var(--bl);}
+.hub-card-left{display:flex;align-items:center;gap:12px;}
+.hub-card-icon{width:40px;height:40px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.hub-card-title{font-size:14px;font-weight:500;color:var(--text);}
+.hub-card-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+
+/* SROW */
+.srow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.srow:last-child{border-bottom:none;}
+.srow.diff{background:var(--rl);margin:0 -4px;padding:8px 4px;border-radius:6px;}
+.tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;margin-left:3px;font-family:var(--mono);font-weight:500;}
+.tag-n{background:var(--gl);color:var(--green);}
+.tag-f{background:var(--bl);color:var(--blue);}
+</style>
+</head>
+<body>
+<div id="loading-screen">
+  <img src="logo.png" alt="Nômade Stays">
+  <div class="spinner"></div>
+  <div class="loading-text">Carregando...</div>
+</div>
+<div id="app"></div>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+function updateClock(){
+  const el=document.getElementById('clock');
+  if(!el) return;
+  const n=new Date();
+  el.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+updateClock();setInterval(updateClock,15000);
+function closeLav(){} // no-op, kept for compatibility
+
+// Fornecedores e preços por peça
+const FORNECEDORES={
+  'izabel':{
+    nome:'Izabel Cristina',
+    frete:0,
+    precos:{
+      'lc_king':2.80,'le_king':2.80,
+      'lc_queen':2.80,'le_queen':2.80,
+      'lc_casal':1.40,'le_casal':1.40,
+      'lc_solteiro':1.40,'le_solteiro':1.40,
+      'ce_king':25,'ce_queen':25,'ce_casal':25,
+      'fronha':0.75,
+      'tb':1.40,
+      'tr':1.40,
+      'tap':1.40,
+      'roupao':3.00,
+      'toalha_piscina':2.80,
+      'toalha_xg':2.80,
+      'cobertor':25,
+      'capa_edredom_cl_king':5.00,
+      'capa_edredom_cl_queen':5.00,
+      'capa_edredom_cl_casal':5.00,
+      'toalha_makeup':0.75,
+      'panos_prato':0.75,
+      'relavagem':5.00,
+    }
+  }
+};
+
+// Todas as peças possíveis
+const PECAS=[
+  {id:'lc_king',nome:'Lençol cobrir — king'},
+  {id:'le_king',nome:'Lençol elástico — king'},
+  {id:'lc_queen',nome:'Lençol cobrir — queen'},
+  {id:'le_queen',nome:'Lençol elástico — queen'},
+  {id:'lc_casal',nome:'Lençol cobrir — casal'},
+  {id:'le_casal',nome:'Lençol elástico — casal'},
+  {id:'lc_solteiro',nome:'Lençol cobrir — solteiro'},
+  {id:'le_solteiro',nome:'Lençol elástico — solteiro'},
+  {id:'ce_king',nome:'Edredom — king'},
+  {id:'ce_queen',nome:'Edredom — queen'},
+  {id:'ce_casal',nome:'Edredom — casal'},
+  {id:'fronha',nome:'Fronha'},
+  {id:'tb',nome:'Toalha de banho'},
+  {id:'tr',nome:'Toalha de rosto'},
+  {id:'tap',nome:'Toalha de piso'},
+  {id:'roupao',nome:'Roupão'},
+  {id:'toalha_piscina',nome:'Toalha de piscina'},
+  {id:'toalha_xg',nome:'Toalha extra grande'},
+  {id:'cobertor',nome:'Cobertor'},
+  {id:'capa_edredom_cl_king',nome:'Capa edredom/cobre-leito — king'},
+  {id:'capa_edredom_cl_queen',nome:'Capa edredom/cobre-leito — queen'},
+  {id:'capa_edredom_cl_casal',nome:'Capa edredom/cobre-leito — casal'},
+  {id:'toalha_makeup',nome:'Toalha make up'},
+  {id:'panos_prato',nome:'Panos de prato'},
+  {id:'relavagem',nome:'Relavagem (manchas resistentes)'},
+  {id:'frete',nome:'Frete'},
+];
+
+// Helper: get price for a piece given fornecedor
+function getPreco(fornId, pecaId){
+  if(!fornId||!pecaId) return 0;
+  const f=FORNECEDORES[fornId];
+  if(!f) return 0;
+  return f.precos[pecaId]||0;
+}
+
+// Helper: get pieces visible for a fornecedor (price > 0)
+function getPecasVisiveis(fornId){
+  return PECAS.filter(p=>getPreco(fornId,p.id)>0);
+}
+const UNIDADES=['Pinheiros','Vila Mariana'];
+const GRUPOS=[
+  {nome:'Lençóis',ids:['lc_king','le_king','lc_queen','le_queen','lc_casal','le_casal','lc_solteiro','le_solteiro']},
+  {nome:'Edredons e cobertores',ids:['ce_king','ce_queen','ce_casal','cobertor','capa_edredom_cl_king','capa_edredom_cl_queen','capa_edredom_cl_casal']},
+  {nome:'Fronhas/Banho',ids:['fronha','tb','tr','tap','roupao','toalha_piscina','toalha_xg','toalha_makeup','panos_prato']},
+  {nome:'Serviços extras',ids:['relavagem','frete']},
+];
+
+function emptyC(){
+  const c={};
+  UNIDADES.forEach(u=>{c[u]={};PECAS.forEach(p=>{c[u][p.id]=0;});});
+  return c;
+}
+
+function loadState(){
+  return{view:'home',activeUnit:'Pinheiros',coletas:[],currentColeta:null,modal:null};
+}
+
+function saveState(){
+  if(!window._db) return;
+  (S.coletas||[]).forEach(function(col){
+    window._db.ref('coletas/'+col.id).set(col).catch(function(e){console.error('Save error:',e);});
+  });
+}
+
+let S=loadState();
+
+function hideLoading(){
+  const ls=document.getElementById('loading-screen');
+  if(ls) ls.style.display='none';
+}
+
+var firebaseConfig={
+  apiKey:"AIzaSyDzHIzTP_WKb9JSntqybQnRRB_SVxoTSG8",
+  authDomain:"lavanderianomade.firebaseapp.com",
+  databaseURL:"https://lavanderianomade-default-rtdb.firebaseio.com",
+  projectId:"lavanderianomade",
+  storageBucket:"lavanderianomade.firebasestorage.app",
+  messagingSenderId:"32102388223",
+  appId:"1:32102388223:web:d8b838473639d02eb517ca"
+};
+
+function initFirebase(){
+  // Show app immediately with empty state
+  hideLoading();
+  render();
+  // Connect Firebase in background
+  try{
+    firebase.initializeApp(firebaseConfig);
+    var db=firebase.database();
+    window._db=db;
+    db.ref('coletas').on('value',function(snap){
+      var data=snap.val();
+      var loaded=data?Object.values(data):[];
+      loaded.sort(function(a,b){return b.id-a.id;});
+      S.coletas=loaded;
+      // Validate currentColeta
+      if(S.currentColeta&&!S.coletas.find(function(c){return c.id===S.currentColeta;})){
+        S.currentColeta=null;
+      }
+      // Only auto-set currentColeta if we're already in hub/coleta views
+      if(['hub','nomade_pin','nomade_vm','fornecedor','conferencia'].includes(S.view)){
+        if(!S.currentColeta){
+          var active=S.coletas.find(function(c){return !c.finalizada;});
+          if(active) S.currentColeta=active.id;
+        }
+      }
+      render();
+    },function(err){
+      console.error('Firebase read error:',err);
+    });
+  }catch(e){
+    console.error('Firebase init error:',e);
+  }
+}
+
+// ---- HELPERS ----
+function totalValC(c,fornId){
+  let t=0;
+  UNIDADES.forEach(u=>PECAS.forEach(p=>{
+    t+=(c[u][p.id]||0)*getPreco(fornId||'izabel',p.id);
+  }));
+  return t;
+}
+function totalPU(c,u){return PECAS.reduce((s,p)=>s+(c[u][p.id]||0),0);}
+function totalPC(c){let t=0;UNIDADES.forEach(u=>PECAS.forEach(p=>t+=(c[u][p.id]||0)));return t;}
+function divs(col){
+  const d=[];
+  UNIDADES.forEach(u=>PECAS.forEach(p=>{
+    const n=col.nomade[u][p.id]||0,f=col.fornecedor[u][p.id]||0;
+    if(n!==f)d.push({u,p,n,f});
+  }));
+  return d;
+}
+function valValidado(col){
+  let t=0;
+  const fid=col.fornecedorId||'izabel';
+  UNIDADES.forEach(u=>PECAS.forEach(p=>{
+    t+=Math.min(col.nomade[u][p.id]||0,col.fornecedor[u][p.id]||0)*getPreco(fid,p.id);
+  }));
+
+  return t;
+}
+function allNOk(col){
+  if(!col||!col.nomadeOk) return false;
+  const ok=col.nomadeOk;
+  const pin=ok['Pinheiros']===true;
+  const vm=ok['Vila_Mariana']===true||ok['Vila Mariana']===true;
+  return pin&&vm;
+}
+function allFOk(col){
+  if(!col||!col.fornecedorOk) return false;
+  const ok=col.fornecedorOk;
+  const pin=ok['Pinheiros']===true||ok.Pinheiros===true;
+  const vm=ok['Vila_Mariana']===true||ok['Vila Mariana']===true;
+  return pin&&vm;
+}
+function colStatus(col){
+  if(!allFOk(col))return'pendente';
+  if(col.confirmadoComDivergencia)return'confirmado';
+  if(divs(col).length>0)return'divergente';
+  return'confirmado';
+}
+function ql(q){return q==='1'?'1ª quinzena':'2ª quinzena';}
+function setView(v){S.view=v;saveState();render();}
+function setUnit(u){S.activeUnit=u;render();}
+function today(){return new Date().toISOString().slice(0,10);}
+function fmtDate(d){if(!d)return'';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`;}
+function fmtM(v){return'R$ '+v.toFixed(2).replace('.',',');}
+function getCol(){return S.coletas.find(c=>c.id===S.currentColeta);}
+
+// ---- ACTIONS ----
+function startNova(){S.modal='nova';S._nf={data:today(),periodo:'retirada',turno:'1',fornecedor:'izabel'};render();}
+
+function confirmNova(){
+  const f=S._nf;if(!f.data)return;
+  const col={
+    id:Date.now(),data:f.data,periodo:f.periodo,turno:f.turno,
+    fornecedorId:f.fornecedor||'izabel',
+    nomade:emptyC(),fornecedor:emptyC(),
+    nomadeOk:{Pinheiros:false,Vila_Mariana:false},
+    fornecedorOk:{Pinheiros:false,Vila_Mariana:false},nomadeNome:'',fornecedorNome:'',confirmedAt:null,
+  };
+  S.coletas.unshift(col);
+  S.currentColeta=col.id;
+  S.modal=null;S.view='hub';
+  // Write new coleta directly to Firebase
+  if(window._db){
+    window._db.ref('coletas/'+col.id).set(col).catch(function(e){console.error(e);});
+  }
+  render();
+}
+
+function openColeta(id){
+  S.currentColeta=id;
+  const col=S.coletas.find(c=>c.id===id);if(!col)return;
+  if(!allNOk(col))S.view='hub';
+  else if(!allFOk(col))S.view='fornecedor';
+  else S.view='conferencia';
+  render();
+}
+
+function changeCount(who,unit,id,delta){
+  const col=getCol();if(!col)return;
+  col[who][unit][id]=Math.max(0,(col[who][unit][id]||0)+delta);
+  saveState();render();
+}
+
+// Unlock unit for editing
+function unlockUnit(u){
+  const col=getCol();if(!col)return;
+  col.nomadeOk[u.replace(' ','_')]=false;
+  if(allFOk(col)){col.fornecedorOk={Pinheiros:false,'Vila Mariana':false};col.nomadeNome='';col.fornecedorNome='';}
+  S.view=u==='Pinheiros'?'nomade_pin':'nomade_vm';
+  S.activeUnit=u;
+  saveState();render();
+}
+
+function unlockFornUnit(u){
+  const col=getCol();if(!col)return;
+  col.fornecedorOk[u.replace(' ','_')]=false;col.fornecedorNome='';
+  S.activeUnit=u;S.view='fornecedor';saveState();render();
+}
+function unlockFornecedor(){
+  const col=getCol();if(!col)return;
+  col.fornecedorOk={Pinheiros:false,'Vila Mariana':false};col.fornecedorNome='';
+  S.view='fornecedor';saveState();render();
+}
+
+function submitUnidade(u){S.modal='confirm_unidade';S._cu=u;render();}
+function confirmarUnidade(){
+  const col=getCol();if(!col)return;
+  // Use underscore key so Firebase stores consistently
+  const key=S._cu.replace(' ','_');
+  col.nomadeOk[key]=true;
+  S.modal=null;
+  S.view='hub';
+  saveState();render();
+}
+function submitForn(){S._cu=S.activeUnit;S.modal='confirm_forn';render();}
+function confirmarForn(){
+  const col=getCol();if(!col)return;
+  col.fornecedorOk[S._cu.replace(' ','_')]=true;
+  S.modal=null;
+  if(allFOk(col)){col.confirmedAt=new Date().toISOString();S.view='conferencia';}
+  else S.view='fornecedor';
+  saveState();render();
+}
+function assinarN(){S.modal='assinar_n';S._ai='';render();}
+function confirmarAssinarN(){
+  const col=getCol();if(!col)return;
+  col.nomadeNome=S._ai||'Nômade';S.modal=null;saveState();render();
+}
+function assinarF(){S.modal='assinar_f';S._ai='';render();}
+function confirmarAssinarF(){
+  const col=getCol();if(!col)return;
+  col.fornecedorNome=S._ai||'Fornecedor';S.modal=null;saveState();render();
+}
+
+function confirmarComDivergencia(){
+  const col=getCol();if(!col)return;
+  col.confirmadoComDivergencia=true;
+  col.finalizada=true;
+  S.currentColeta=null;
+  S.view='home';
+  saveState();
+  render();
+}
+
+function confirmarRetirada(){
+  const col=getCol();
+  if(col) col.finalizada=true;
+  S.currentColeta=null;
+  S.view='home';
+  saveState();
+  render();
+  // retirada confirmed, already on hub
+}
+
+function goHub(){
+  // After confirming unit, go back to hub (active coleta exists)
+  S.view='hub';
+  render();
+}
+
+function goHome(){
+  // Nav tab click: if active coleta, show hub; else show home with button
+  const col=getActiveCurrent();
+  S.view=(col&&!col.finalizada)?'hub':'home';
+  render();
+}
+function exportWA(){
+  const col=getCol();if(!col)return;
+  const dd=divs(col);const val=valValidado(col);
+  let msg=`*Nômade Lavanderia — Conferência*\nData: ${fmtDate(col.data)} | ${col.periodo==='retirada'?'Retirada':'Entrega'} | ${ql(col.turno)}\n\n`;
+  if(!dd.length)msg+=`✅ Sem divergências\n`;
+  else{msg+=`⚠️ ${dd.length} divergência${dd.length>1?'s':''}:\n`;dd.forEach(d=>{msg+=`• ${d.p.nome} (${d.u}): Nômade ${d.n} / Forn. ${d.f}\n`;});}
+  msg+=`\n*Total Nômade:* ${fmtM(totalValC(col.nomade,col.fornecedorId))}\n*Total validado:* ${fmtM(val)}\n`;
+  if(col.nomadeNome)msg+=`\n✅ Nômade: ${col.nomadeNome}`;
+  if(col.fornecedorNome)msg+=`\n✅ Fornecedor: ${col.fornecedorNome}`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function pedirExcluir(id){
+  S._excluirId=id;
+  S.modal='confirmar_excluir';
+  render();
+}
+function confirmarExcluir(){
+  var id=S._excluirId;
+  S.coletas=S.coletas.filter(function(c){return c.id!==id;});
+  if(S.currentColeta===id) S.currentColeta=null;
+  S.modal=null;
+  S.view='home';
+  if(window._db){
+    window._db.ref('coletas/'+id).remove().catch(function(e){console.error(e);});
+  }
+  render();
+}
+function qColetas(q){return S.coletas.filter(c=>c.turno===q);}
+function totalQ(q){return qColetas(q).filter(c=>allFOk(c)).reduce((s,c)=>s+valValidado(c),0);}
+
+// ---- RENDER ----
+function render(){
+  const app=document.getElementById('app');
+  let html=renderHdr()+`<div id="main">`;
+  if(S.view==='hub')html+=renderHub();
+  else if(S.view==='home')html+=renderHome();
+  else if(S.view==='nomade_pin')html+=renderNomadeUnit('Pinheiros');
+  else if(S.view==='nomade_vm')html+=renderNomadeUnit('Vila Mariana');
+  else if(S.view==='fornecedor')html+=renderFornecedor();
+  else if(S.view==='conferencia')html+=renderConferencia();
+  else if(S.view==='historico')html+=renderHistorico();
+  else if(S.view==='quinzena')html+=renderQuinzena();
+  else if(S.view==='dashboard')html+=renderDashboard();
+  html+=`</div>`+renderFooter();
+  if(S.modal)html+=renderModal();
+  app.innerHTML=html;
+}
+
+function renderHdr(){
+  const isColeta=['nomade_pin','nomade_vm','fornecedor','conferencia','hub'].includes(S.view);
+  const logoSrc='logo.png';
+  return`<div class="hdr">
+    <div class="hdr-top">
+      <img src="${logoSrc}" alt="Nômade Stays" style="height:28px;width:auto;">
+      ${isColeta?`<button class="back-btn" onclick="goHub()">← voltar</button>`:''}
+    </div>
+    <div class="nav">
+      <button class="nav-btn ${S.view==='hub'||S.view==='home'||isColeta?'active':''}" onclick="goHome()">Coleta</button>
+      <button class="nav-btn ${S.view==='historico'?'active':''}" onclick="setView('historico')">Histórico</button>
+      <button class="nav-btn ${S.view==='quinzena'?'active':''}" onclick="setView('quinzena')">Resumo</button>
+      <button class="nav-btn ${S.view==='dashboard'?'active':''}" onclick="setView('dashboard')">Dashboard</button>
+    </div>
+  </div>`;
+}
+
+function renderFooter(){
+  if(S.view==='historico'||S.view==='quinzena'||S.view==='dashboard') return'';
+  if(S.view==='hub') return''; // hub shows cards, no footer needed
+  if(S.view==='home'){
+    return`<div class="footer"><button class="btn-p" onclick="startNova()">+ Nova coleta</button></div>`;
+  }
+
+  if(S.view==='nomade_pin'||S.view==='nomade_vm'){
+    const col=getCol();if(!col)return'';
+    const u=S.view==='nomade_pin'?'Pinheiros':'Vila Mariana';
+    const jaOk=col.nomadeOk[u];
+    if(jaOk)return`<div class="footer"><button class="btn-p" disabled>✓ ${u} confirmado</button></div>`;
+    return`<div class="footer"><button class="btn-p" onclick="submitUnidade('${u}')">Confirmar envio — ${u}</button></div>`;
+  }
+  if(S.view==='fornecedor'){
+    const col=getCol();
+    const ok=col&&!allFOk(col)&&totalPC(col.fornecedor)>0;
+    // per-unit confirm
+    const u=S.activeUnit,jaOk=col&&col.fornecedorOk[u],outra=UNIDADES.find(x=>x!==u);
+    if(col&&allFOk(col))return`<div class="footer"><button class="btn-p" disabled>✓ Conferência confirmada</button></div>`;
+    if(jaOk&&!col.fornecedorOk[outra])
+      return`<div class="footer"><button class="btn-p" onclick="setUnit('${outra}')">Ir para ${outra} →</button></div>`;
+    if(jaOk)return`<div class="footer"><button class="btn-p" disabled>✓ Ambas confirmadas</button></div>`;
+    return`<div class="footer"><button class="btn-p" onclick="submitForn()">Confirmar conferência — ${u}</button></div>`;
+  }
+  if(S.view==='conferencia'){
+    const col=getCol();
+    const ambosAssinaram=col&&col.nomadeNome&&col.fornecedorNome;
+    const waSvg=`<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
+    const temDivs=col&&divs(col).length>0&&!col.confirmadoComDivergencia;
+    if(ambosAssinaram){
+      return`<div class="footer" style="display:flex;flex-direction:column;gap:8px;">
+        ${temDivs
+          ?`<button class="btn-p" onclick="confirmarComDivergencia()" style="background:#854F0B;">⚠️ Confirmar com divergências</button>`
+          :`<button class="btn-p" onclick="confirmarRetirada()">✓ Confirmar retirada</button>`
+        }
+        <button class="wa-btn" onclick="exportWA()" style="padding:10px;">${waSvg} WhatsApp</button>
+      </div>`;
+    }
+    return`<div class="footer"><button class="wa-btn" onclick="exportWA()">${waSvg} Enviar por WhatsApp</button></div>`;
+  }
+  return'';
+}
+
+function renderHome(){
+  const recentes=S.coletas.slice(0,5);
+  let html=`<div class="sec" style="padding-top:20px;">`;
+  if(!recentes.length){
+    html+=`<div class="empty"><div class="icon">📋</div><strong>Nenhuma coleta ainda</strong>Crie a primeira coleta abaixo.</div>`;
+  } else {
+    html+=`<div class="sec-label">Recentes</div>`;
+    html+=`</div>`;
+    recentes.forEach(col=>{html+=renderHistCard(col);});
+    return html;
+  }
+  html+=`</div>`;
+  return html;
+}
+
+
+function renderHistCard(col){
+  const st=colStatus(col);
+  const lbl={pendente:'Pendente',confirmado:'Confirmado',divergente:'Divergência'}[st];
+  const cls={pendente:'p-pend',confirmado:'p-ok',divergente:'p-div'}[st];
+  const dd=divs(col);
+  const val=allFOk(col)?valValidado(col):totalValC(col.nomade,col.fornecedorId);
+  return`<div class="hist-card" onclick="openColeta(${col.id})">
+    <div class="hist-top">
+      <div class="hist-title">${fmtDate(col.data)} · ${col.periodo==='retirada'?'Retirada':'Entrega'}</div>
+      <span class="pill ${cls}">${lbl}</span>
+    </div>
+    <div class="hist-sub">
+      <span>${ql(col.turno)} · ${FORNECEDORES[col.fornecedorId]?FORNECEDORES[col.fornecedorId].nome:''} · ${fmtM(val)}${dd.length>0&&allFOk(col)?` · ${dd.length} div.`:''}</span>
+      <button onclick="event.stopPropagation();pedirExcluir(${col.id})" style="font-size:11px;color:#A32D2D;background:#FCEBEB;border:none;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;flex-shrink:0;">🗑 Excluir</button>
+    </div>
+  </div>`;
+}
+
+function hubNav(view){
+  const col=getCol()||getActiveCurrent();
+  if(!col) return;
+  if(view==='fornecedor'&&!allNOk(col)) return;
+  S.currentColeta=col.id;
+  S.view=view;
+  render();
+}
+
+function renderHub(){
+  const col=getCol()||getActiveCurrent();
+  const ok=col&&col.nomadeOk?col.nomadeOk:{};
+  const okPin=ok['Pinheiros']===true||ok.Pinheiros===true;
+  const okVM=ok['Vila Mariana']===true||ok['Vila_Mariana']===true;
+  const fornOk=col?allFOk(col):false;
+  const fornEnabled=okPin&&okVM;
+
+  let html=`<div class="sec">`;
+
+  if(!col){
+    html+=`<div style="padding:12px 2px 16px;font-size:13px;color:var(--text2);">Nenhuma coleta ativa. Crie uma nova para começar.</div>`;
+  } else {
+    const fornNomeHub=FORNECEDORES[col.fornecedorId]?FORNECEDORES[col.fornecedorId].nome:(col.fornecedorId||'');
+    html+=`<div class="meta-row" style="margin-bottom:14px;">
+      <span class="meta-text">${fmtDate(col.data)} · ${col.periodo==='retirada'?'Retirada':'Entrega'} · ${ql(col.turno)} · ${fornNomeHub}</span>
+    </div>`;
+  }
+
+  html+=`<div class="sec-label">Selecione a unidade</div>`;
+
+  html+=`<div class="hub-card" style="${!col?'opacity:.4;pointer-events:none;':''}" onclick="hubNav('nomade_pin')">
+    <div class="hub-card-left">
+      <div class="hub-card-icon">🏠</div>
+      <div>
+        <div class="hub-card-title">Pinheiros</div>
+        <div class="hub-card-sub">Preenchimento Nômade</div>
+      </div>
+    </div>
+    ${okPin?`<span class="badge b-ok">✓ Confirmado</span>`:`<span class="badge b-pend">Pendente</span>`}
+  </div>`;
+
+  html+=`<div class="hub-card" style="${!col?'opacity:.4;pointer-events:none;':''}" onclick="hubNav('nomade_vm')">
+    <div class="hub-card-left">
+      <div class="hub-card-icon">🏠</div>
+      <div>
+        <div class="hub-card-title">Vila Mariana</div>
+        <div class="hub-card-sub">Preenchimento Nômade</div>
+      </div>
+    </div>
+    ${okVM?`<span class="badge b-ok">✓ Confirmado</span>`:`<span class="badge b-pend">Pendente</span>`}
+  </div>`;
+
+  html+=`<div class="hub-card${fornEnabled?' forn-card':''}" style="${(!col||!fornEnabled)?'opacity:.4;pointer-events:none;':''}" onclick="hubNav('fornecedor')">
+    <div class="hub-card-left">
+      <div class="hub-card-icon">${fornEnabled?'🔓':'🔒'}</div>
+      <div>
+        <div class="hub-card-title">Conferência Fornecedor</div>
+        <div class="hub-card-sub">${fornEnabled?'Disponível para preenchimento':'Aguardando ambas as unidades'}</div>
+      </div>
+    </div>
+    ${fornOk?`<span class="badge b-ok">✓ Confirmado</span>`:(fornEnabled?`<span class="badge b-f">Disponível</span>`:`<span class="badge b-pend" style="opacity:.5;">Bloqueado</span>`)}
+  </div>`;
+
+  if(fornOk&&col){
+    html+=`<div style="margin-top:8px;">
+      <div class="hub-card" onclick="openConferencia()" style="border-color:var(--green);background:var(--gl);">
+        <div class="hub-card-left">
+          <div class="hub-card-icon">📋</div>
+          <div>
+            <div class="hub-card-title" style="color:var(--green);">Ver conferência</div>
+            <div class="hub-card-sub">Resultado e confirmações</div>
+          </div>
+        </div>
+        <span style="color:var(--green);font-size:18px;">→</span>
+      </div>
+    </div>`;
+  }
+
+  html+=`</div>`;
+  return html;
+}
+
+function openConferencia(){
+  S.view='conferencia';
+  render();
+}
+
+function getActiveCurrent(){
+  // Find most recent non-finalized coleta
+  if(S.currentColeta){
+    const col=S.coletas.find(c=>c.id===S.currentColeta);
+    if(col&&!col.finalizada) return col;
+  }
+  // Find most recent non-finalized
+  const active=S.coletas.find(c=>!c.finalizada);
+  if(active){S.currentColeta=active.id;return active;}
+  return null;
+}
+
+function renderNomadeUnit(unitOverride){
+  const col=getCol();
+  if(!col)return'<div class="empty">Coleta não encontrada.</div>';
+  const u=unitOverride||S.activeUnit;
+  const currentOk=col.nomadeOk[u];
+  let html=`<div class="sec">
+    <div class="unit-tabs">
+      ${UNIDADES.map(un=>{
+        const ok=col.nomadeOk[un];
+        return`<button class="unit-tab ${u===un?'active':''} ${ok?'confirmed-tab':''}" onclick="setUnit('${un}')">${un}${ok?`<span class="ck">✓</span>`:''}</button>`;
+      }).join('')}
+    </div>
+    <div class="meta-row">
+      <span class="meta-text">${fmtDate(col.data)} · ${col.periodo==='retirada'?'Retirada':'Entrega'} · ${ql(col.turno)}</span>
+      <span class="badge b-n">Nômade</span>
+    </div>`;
+
+  if(currentOk){
+    html+=`<div class="locked-bar">✓ ${u} confirmado<button class="edit-btn" onclick="unlockUnit('${u}')">✏️ Editar</button></div>`;
+    // read-only view — show only non-zero
+    GRUPOS.forEach(g=>{
+      const com=g.ids.map(id=>PECAS.find(p=>p.id===id)).filter(p=>p&&(col.nomade[u][p.id]||0)>0&&getPreco(col.fornecedorId||'izabel',p.id)>0);
+      if(!com.length)return;
+      html+=`<div class="sec-label">${g.nome}</div>`;
+      com.forEach(p=>{
+        const v=col.nomade[u][p.id]||0;
+        const preco=getPreco(col.fornecedorId||'izabel',p.id);
+        html+=`<div class="item-row has-v">
+          <div class="item-info"><div class="item-name">${p.nome}</div><div class="item-price">R$ ${preco.toFixed(2).replace('.',',')}</div></div>
+          <div class="counter"><span class="cval nz">${v}</span></div>
+        </div>`;
+      });
+    });
+  } else {
+    const fidEdit=col.fornecedorId||'izabel';
+    GRUPOS.forEach(g=>{
+      const pecasEdit=g.ids.map(id=>PECAS.find(p=>p.id===id)).filter(p=>p&&getPreco(fidEdit,p.id)>0);
+      if(!pecasEdit.length) return;
+      html+=`<div class="sec-label">${g.nome}</div>`;
+      pecasEdit.forEach(p=>{
+        const v=col.nomade[u][p.id]||0;
+        const preco=getPreco(fidEdit,p.id);
+        html+=`<div class="item-row ${v>0?'has-v':''}">
+          <div class="item-info"><div class="item-name">${p.nome}</div><div class="item-price">R$ ${preco.toFixed(2).replace('.',',')}</div></div>
+          <div class="counter">
+            <button class="cbtn" onclick="changeCount('nomade','${u}','${p.id}',-1)">−</button>
+            <span class="cval ${v>0?'nz':''}">${v}</span>
+            <button class="cbtn plus" onclick="changeCount('nomade','${u}','${p.id}',1)">+</button>
+          </div>
+        </div>`;
+      });
+      html+=`<div style="height:6px;"></div>`;
+    });
+  }
+  html+=`</div>`;
+
+  const tP=PECAS.reduce((s,p)=>s+(col.nomade['Pinheiros'][p.id]||0),0);
+  const tV=PECAS.reduce((s,p)=>s+(col.nomade['Vila Mariana'][p.id]||0),0);
+  const okP=col.nomadeOk['Pinheiros'],okV=col.nomadeOk['Vila Mariana'];
+  html+=`<div class="totals-card"><div class="tgrid">
+    <div class="titem"><label>Pinheiros ${okP?'✓':''}</label><span class="val">${tP} peças</span></div>
+    <div class="titem"><label>Vila Mariana ${okV?'✓':''}</label><span class="val">${tV} peças</span></div>
+    <div class="titem"><label>Total</label><span class="val">${tP+tV} peças</span></div>
+    <div class="titem"><label>Valor est.</label><span class="val money">${fmtM(totalValC(col.nomade,col.fornecedorId))}</span></div>
+  </div></div>`;
+  return html;
+}
+
+function renderFornecedor(){
+  const col=getCol();
+  if(!col)return'<div class="empty">Coleta não encontrada.</div>';
+  if(!allNOk(col)){
+    const okP=col.nomadeOk['Pinheiros'],okV=col.nomadeOk['Vila Mariana'];
+    return`<div class="empty"><div class="icon">⏳</div><strong>Aguardando Nômade</strong>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center;">
+        <span class="badge ${okP?'b-ok':'b-warn'}">Pinheiros ${okP?'✓':'pendente'}</span>
+        <span class="badge ${okV?'b-ok':'b-warn'}">Vila Mariana ${okV?'✓':'pendente'}</span>
+      </div></div>`;
+  }
+  if(allFOk(col)){
+    return`<div class="empty"><div class="icon">✅</div><strong>Conferência registrada</strong>
+      <div style="margin-top:12px;"><button class="edit-btn" style="font-size:13px;padding:7px 14px;border-radius:8px;color:var(--blue);background:var(--bl);border:none;cursor:pointer;font-family:var(--font);font-weight:500;" onclick="unlockFornecedor()">✏️ Editar conferência</button></div>
+    </div>`;
+  }
+
+  const u=S.activeUnit;
+  const currentFOk=col.fornecedorOk[u];
+  // DUAL COLUMN view: each row shows Nômade value (read-only) and Fornecedor counter
+  let html=`<div class="sec">
+    <div class="unit-tabs">
+      ${UNIDADES.map(un=>{
+        const ok=col.fornecedorOk[un];
+        return`<button class="unit-tab ${u===un?'active':''} ${ok?'confirmed-tab':''}" onclick="setUnit('${un}')">${un}${ok?`<span class="ck">✓</span>`:''}</button>`;
+      }).join('')}
+    </div>
+    <div class="meta-row">
+      <span class="meta-text">${fmtDate(col.data)} · ${ql(col.turno)}</span>
+      <span class="badge b-f">Fornecedor</span>
+    </div>
+    <div class="col-headers">
+      <div class="col-h" style="flex:1.4;text-align:left;">Peça</div>
+      <div class="col-h nh" style="flex:.7;">Nômade</div>
+      <div class="col-h fh" style="flex:.7;">Forn.</div>
+      <div class="col-h" style="flex:.3;"></div>
+    </div>`;
+
+  if(currentFOk){
+    html+=`<div class="locked-bar">✓ ${u} confirmado<button class="edit-btn" onclick="unlockFornUnit('${u}')">✏️ Editar</button></div>`;
+  }
+
+  const fidForn=col.fornecedorId||'izabel';
+  GRUPOS.forEach(g=>{
+    const pecasForn=g.ids.map(id=>PECAS.find(p=>p.id===id)).filter(p=>p&&getPreco(fidForn,p.id)>0);
+    if(!pecasForn.length) return;
+    html+=`<div class="sec-label">${g.nome}</div>`;
+    pecasForn.forEach(p=>{
+      const vn=col.nomade[u][p.id]||0,vf=col.fornecedor[u][p.id]||0;
+      const hasBoth=vn>0||vf>0;
+      const isDiff=hasBoth&&vn!==vf;
+      const isMatch=hasBoth&&vn===vf;
+      html+=`<div class="dual-row ${isDiff?'diff':isMatch?'match':''}">
+        <div class="dual-info">
+          <div class="dual-name">${p.nome}</div>
+          <div class="dual-price">R$ ${getPreco(fidForn,p.id).toFixed(2).replace('.',',')}</div>
+        </div>
+        <div class="dual-col">
+          <div class="dual-col-label nl">NÔM</div>
+          <div class="dual-col-val nv ${vn===0?'zero':''}">${vn}</div>
+        </div>
+        <div class="dual-col" style="flex-direction:row;gap:3px;padding:4px 4px;">
+          ${currentFOk
+            ? `<span class="dual-col-val fv ${vf===0?'zero':''}" style="min-width:52px;text-align:center;font-size:14px;">${vf}</span>`
+            : `<button class="cbtn" style="width:24px;height:24px;font-size:13px;" onclick="changeCount('fornecedor','${u}','${p.id}',-1)">−</button>
+               <span class="dual-col-val fv ${vf===0?'zero':''}" style="min-width:22px;text-align:center;font-size:14px;">${vf}</span>
+               <button class="cbtn plus" style="width:24px;height:24px;font-size:13px;" onclick="changeCount('fornecedor','${u}','${p.id}',1)">+</button>`
+          }
+        </div>
+        <div class="dual-status">
+          ${hasBoth?(isMatch?`<div class="dot-ok"></div>`:`<div class="dot-diff"></div>`):`<div class="dot-empty"></div>`}
+        </div>
+      </div>`;
+    });
+    html+=`<div style="height:6px;"></div>`;
+  });
+  return html+`</div>`;
+}
+
+function renderConferencia(){
+  const col=getCol();
+  if(!col||!allFOk(col))return`<div class="empty"><div class="icon">⏳</div><div>Aguardando conferência do fornecedor.</div></div>`;
+  const dd=divs(col),val=valValidado(col),totalN=totalValC(col.nomade,col.fornecedorId);
+
+  let html=`<div style="height:12px;"></div>`;
+  html+=`<div class="totals-card"><div class="tgrid">
+    <div class="titem"><label>Total Nômade</label><span class="val">${fmtM(totalN)}</span></div>
+    <div class="titem"><label>Total validado</label><span class="val money">${fmtM(val)}</span></div>
+  </div></div>`;
+  html+=`<div class="alert ${dd.length>0?'a-warn':'a-ok'}">${dd.length>0?`⚠️  ${dd.length} divergência${dd.length>1?'s':''}`:' ✅  Tudo conferido — sem divergências'}</div>`;
+
+  // Confirmações + editar
+  html+=`<div class="confirm-box">
+    <div class="confirm-side ${col.nomadeNome?'done':''}">
+      <div class="confirm-label">Confirmação Nômade</div>
+      ${col.nomadeNome
+        ?`<div class="confirm-name">${col.nomadeNome}</div><div class="confirm-check">✓ Confirmado</div>`
+        :`<button class="confirm-btn cb-n" onclick="assinarN()">Confirmar e assinar</button>`}
+    </div>
+    <div class="confirm-divider"></div>
+    <div class="confirm-side ${col.fornecedorNome?'done':''}">
+      <div class="confirm-label">Confirmação Fornecedor</div>
+      ${col.fornecedorNome
+        ?`<div class="confirm-name">${col.fornecedorNome}</div><div class="confirm-check">✓ Confirmado</div>`
+        :`<button class="confirm-btn cb-f" onclick="assinarF()">Confirmar e assinar</button>`}
+    </div>
+  </div>`;
+
+  // Editar botões
+  html+=`<div style="display:flex;gap:8px;margin:0 16px 12px;">
+    <button onclick="unlockUnit('Pinheiros');S.activeUnit='Pinheiros';" style="flex:1;padding:8px;font-size:12px;font-family:var(--font);border:1px solid var(--border);border-radius:var(--r);background:var(--surface);cursor:pointer;color:var(--text2);">✏️ Nômade</button>
+    <button onclick="unlockFornecedor()" style="flex:1;padding:8px;font-size:12px;font-family:var(--font);border:1px solid var(--border);border-radius:var(--r);background:var(--surface);cursor:pointer;color:var(--text2);">✏️ Fornecedor</button>
+  </div>`;
+
+  // Resumo lado a lado por unidade
+  UNIDADES.forEach(u=>{
+    const com=PECAS.filter(p=>(col.nomade[u][p.id]||0)>0||(col.fornecedor[u][p.id]||0)>0);
+    if(!com.length)return;
+    html+=`<div class="sec">
+      <div class="sec-label">${u}</div>
+      <div class="col-headers">
+        <div class="col-h" style="flex:1.4;text-align:left;">Peça</div>
+        <div class="col-h nh" style="flex:.6;">Nômade</div>
+        <div class="col-h fh" style="flex:.6;">Forn.</div>
+        <div class="col-h" style="flex:.3;"></div>
+      </div>`;
+    com.forEach(p=>{
+      const n=col.nomade[u][p.id]||0,f=col.fornecedor[u][p.id]||0;
+      const isDiff=n!==f,isMatch=n===f&&n>0;
+      html+=`<div class="dual-row ${isDiff?'diff':isMatch?'match':''}">
+        <div class="dual-info"><div class="dual-name">${p.nome}</div></div>
+        <div class="dual-col"><div class="dual-col-val nv ${n===0?'zero':''}">${n}</div></div>
+        <div class="dual-col"><div class="dual-col-val fv ${f===0?'zero':''}">${f}</div></div>
+        <div class="dual-status">${isDiff?`<div class="dot-diff"></div>`:isMatch?`<div class="dot-ok"></div>`:`<div class="dot-empty"></div>`}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+  return html;
+}
+
+function renderHistorico(){
+  if(!S.coletas.length)return`<div class="empty"><div class="icon">📋</div><strong>Nenhuma coleta ainda</strong></div>`;
+  let html=`<div class="spacer"></div>`;
+  S.coletas.forEach(col=>{html+=renderHistCard(col);});
+  return html;
+}
+
+function renderQuinzena(){
+  let html=`<div class="spacer"></div>`;
+
+  ['1','2'].forEach(q=>{
+    const cols=qColetas(q);
+    const total=totalQ(q);
+    const conf=cols.filter(c=>allFOk(c)).length;
+    const pend=cols.filter(c=>!allFOk(c)).length;
+
+    html+=`<div class="quinz-header"><span class="quinz-title">Resumo ${ql(q)}</span><span class="quinz-val">${fmtM(total)}</span></div>`;
+    html+=`<div class="totals-card" style="margin-top:-4px;">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">${cols.length} coleta${cols.length!==1?'s':''} · ${conf} confirmada${conf!==1?'s':''} · ${pend} pendente${pend!==1?'s':''}</div>`;
+
+    if(conf>0){
+      // Separate by fornecedor
+      Object.keys(FORNECEDORES).forEach(fid=>{
+        const fornCols=cols.filter(c=>allFOk(c)&&(c.fornecedorId||'izabel')===fid);
+        if(!fornCols.length) return;
+
+        const pecaTotF={};
+        PECAS.forEach(p=>{pecaTotF[p.id]=0;});
+        fornCols.forEach(col=>{
+          UNIDADES.forEach(u=>{
+            PECAS.forEach(p=>{pecaTotF[p.id]+=(col.fornecedor[u][p.id]||0);});
+          });
+        });
+
+        const totalForn=fornCols.reduce((s,c)=>s+valValidado(c),0);
+
+        html+=`<div style="font-size:13px;font-weight:600;color:var(--text);padding:8px 0 6px;border-top:1px solid var(--border);margin-top:8px;">${FORNECEDORES[fid].nome}</div>`;
+        html+=`<div style="display:flex;gap:0;margin-bottom:6px;padding:0 2px;">
+          <div style="flex:1.6;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);">Peça</div>
+          <div style="flex:.5;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--green);text-align:center;">Qtd</div>
+          <div style="flex:.8;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--green);text-align:right;">Valor</div>
+        </div>`;
+
+        GRUPOS.forEach(g=>{
+          const pecasVis=g.ids.map(id=>PECAS.find(p=>p.id===id)).filter(p=>p&&getPreco(fid,p.id)>0&&pecaTotF[p.id]>0);
+          if(!pecasVis.length) return;
+          html+=`<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:4px 0 2px;">${g.nome}</div>`;
+          pecasVis.forEach(p=>{
+            const qtd=pecaTotF[p.id];
+            const val=qtd*getPreco(fid,p.id);
+            html+=`<div style="display:flex;gap:0;padding:5px 2px;border-bottom:0.5px solid var(--border);align-items:center;">
+              <div style="flex:1.6;font-size:12px;color:var(--text);">${p.nome}</div>
+              <div style="flex:.5;font-size:12px;font-weight:600;color:var(--text);text-align:center;">${qtd}</div>
+              <div style="flex:.8;font-size:12px;font-weight:500;color:var(--green);text-align:right;">${fmtM(val)}</div>
+            </div>`;
+          });
+        });
+
+        if(FORNECEDORES[fid].frete>0){
+          html+=`<div style="display:flex;justify-content:space-between;padding:5px 2px;border-bottom:0.5px solid var(--border);">
+            <div style="font-size:12px;color:var(--text);">Frete</div>
+            <div style="font-size:12px;font-weight:500;color:var(--green);">${fmtM(FORNECEDORES[fid].frete*fornCols.length)}</div>
+          </div>`;
+        }
+
+        html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1.5px solid var(--border);">
+          <span style="font-size:12px;font-weight:600;color:var(--text);">Total ${FORNECEDORES[fid].nome}</span>
+          <span style="font-size:15px;font-weight:600;color:var(--green);">${fmtM(totalForn)}</span>
+        </div>`;
+      });
+    } else {
+      html+=`<div style="font-size:12px;color:var(--text3);padding:4px 0;">Nenhuma coleta confirmada ainda.</div>`;
+    }
+
+    html+=`</div><div style="height:16px;"></div>`;
+  });
+
+  // Grand total
+  const tg=totalQ('1')+totalQ('2');
+  html+=`<div style="margin:0 16px;"><div class="totals-card" style="background:var(--gl);border-color:var(--gm);">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:13px;font-weight:600;color:var(--green);">Total geral (período)</span>
+      <span style="font-size:22px;font-weight:600;color:var(--green);letter-spacing:-.03em;">${fmtM(tg)}</span>
+    </div>
+  </div></div>`;
+
+  return html;
+}
+// ---- DASHBOARD HELPERS ----
+function minCount(col,u,pecaId){
+  return Math.min(col.nomade[u][pecaId]||0, col.fornecedor[u][pecaId]||0);
+}
+function qtdUnidade(col,u){
+  let t=0;PECAS.forEach(p=>{t+=minCount(col,u,p.id);});
+  return t;
+}
+function valUnidade(col,u){
+  let t=0;const fid=col.fornecedorId||'izabel';
+  PECAS.forEach(p=>{t+=minCount(col,u,p.id)*getPreco(fid,p.id);});
+  return t;
+}
+function buildDashboardData(){
+  const confirmadas=S.coletas.filter(c=>allFOk(c));
+  const porUnidade={};
+  UNIDADES.forEach(u=>{porUnidade[u]={qtd:0,valor:0};});
+  const porPeca={};
+  PECAS.forEach(p=>{porPeca[p.id]={qtd:0,valor:0};});
+  const porQuinzena={
+    '1':{qtd:0,valor:0,porPeca:{}},
+    '2':{qtd:0,valor:0,porPeca:{}},
+  };
+  PECAS.forEach(p=>{porQuinzena['1'].porPeca[p.id]=0;porQuinzena['2'].porPeca[p.id]=0;});
+
+  confirmadas.forEach(col=>{
+    const fid=col.fornecedorId||'izabel';
+    UNIDADES.forEach(u=>{
+      PECAS.forEach(p=>{
+        const qtd=minCount(col,u,p.id);
+        if(qtd<=0)return;
+        const val=qtd*getPreco(fid,p.id);
+        porUnidade[u].qtd+=qtd;
+        porUnidade[u].valor+=val;
+        porPeca[p.id].qtd+=qtd;
+        porPeca[p.id].valor+=val;
+        if(porQuinzena[col.turno]){
+          porQuinzena[col.turno].qtd+=qtd;
+          porQuinzena[col.turno].valor+=val;
+          porQuinzena[col.turno].porPeca[p.id]+=qtd;
+        }
+      });
+    });
+  });
+  return{confirmadas,porUnidade,porPeca,porQuinzena};
+}
+
+function renderDashboard(){
+  const {confirmadas,porUnidade,porPeca,porQuinzena}=buildDashboardData();
+  let html=`<div class="spacer"></div>`;
+
+  if(!confirmadas.length){
+    return html+`<div class="empty"><div class="icon">📊</div><strong>Sem dados ainda</strong>O dashboard aparece assim que houver coletas confirmadas.</div>`;
+  }
+
+  // ---- POR UNIDADE ----
+  html+=`<div class="sec" style="padding-bottom:6px;"><div class="sec-label">Por unidade</div></div>`;
+  html+=`<div style="display:flex;gap:8px;margin:0 16px 12px;">`;
+  UNIDADES.forEach(u=>{
+    const d=porUnidade[u];
+    html+=`<div class="totals-card" style="flex:1;margin:0;">
+      <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;">${u}</label>
+      <span class="val" style="display:block;font-size:16px;">${d.qtd} peças</span>
+      <span class="val money" style="display:block;font-size:16px;margin-top:2px;">${fmtM(d.valor)}</span>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  // ---- POR TIPO DE PEÇA ----
+  html+=`<div class="sec" style="padding-bottom:6px;"><div class="sec-label">Por tipo de peça</div></div>`;
+  html+=`<div class="totals-card">`;
+  html+=`<div style="display:flex;gap:0;margin-bottom:6px;padding:0 2px;">
+    <div style="flex:1.6;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);">Peça</div>
+    <div style="flex:.5;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--green);text-align:center;">Qtd</div>
+    <div style="flex:.8;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--green);text-align:right;">Valor</div>
+  </div>`;
+  const pecasComVal=PECAS.filter(p=>porPeca[p.id].qtd>0).sort((a,b)=>porPeca[b.id].valor-porPeca[a.id].valor);
+  if(!pecasComVal.length){
+    html+=`<div style="font-size:12px;color:var(--text3);padding:4px 0;">Nenhuma peça confirmada ainda.</div>`;
+  } else {
+    pecasComVal.forEach(p=>{
+      const d=porPeca[p.id];
+      html+=`<div style="display:flex;gap:0;padding:5px 2px;border-bottom:0.5px solid var(--border);align-items:center;">
+        <div style="flex:1.6;font-size:12px;color:var(--text);">${p.nome}</div>
+        <div style="flex:.5;font-size:12px;font-weight:600;color:var(--text);text-align:center;">${d.qtd}</div>
+        <div style="flex:.8;font-size:12px;font-weight:500;color:var(--green);text-align:right;">${fmtM(d.valor)}</div>
+      </div>`;
+    });
+  }
+  html+=`</div>`;
+
+  // ---- COMPARATIVO 1ª x 2ª QUINZENA ----
+  html+=`<div class="sec" style="padding-bottom:6px;"><div class="sec-label">Comparativo 1ª x 2ª quinzena</div></div>`;
+  const q1=porQuinzena['1'],q2=porQuinzena['2'];
+  const diffValor=q2.valor-q1.valor;
+  const diffQtd=q2.qtd-q1.qtd;
+  html+=`<div style="display:flex;gap:8px;margin:0 16px 12px;">
+    <div class="totals-card" style="flex:1;margin:0;">
+      <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;">1ª quinzena</label>
+      <span class="val" style="display:block;font-size:16px;">${q1.qtd} peças</span>
+      <span class="val money" style="display:block;font-size:16px;margin-top:2px;">${fmtM(q1.valor)}</span>
+    </div>
+    <div class="totals-card" style="flex:1;margin:0;">
+      <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;">2ª quinzena</label>
+      <span class="val" style="display:block;font-size:16px;">${q2.qtd} peças</span>
+      <span class="val money" style="display:block;font-size:16px;margin-top:2px;">${fmtM(q2.valor)}</span>
+    </div>
+  </div>`;
+
+  const diffColor=diffValor>0?'var(--red)':(diffValor<0?'var(--green)':'var(--text3)');
+  const diffSign=diffValor>0?'+':'';
+  html+=`<div class="alert" style="background:var(--bg2);color:var(--text);display:flex;justify-content:space-between;align-items:center;">
+    <span>Variação 2ª vs 1ª quinzena</span>
+    <span style="font-weight:600;color:${diffColor};">${diffSign}${fmtM(diffValor)} (${diffSign}${diffQtd} peças)</span>
+  </div>`;
+
+  // Tabela comparativa por peça
+  const pecasComparativo=PECAS.filter(p=>(q1.porPeca[p.id]||0)>0||(q2.porPeca[p.id]||0)>0);
+  if(pecasComparativo.length){
+    html+=`<div class="totals-card">
+      <div style="display:flex;gap:0;margin-bottom:6px;padding:0 2px;">
+        <div style="flex:1.6;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);">Peça</div>
+        <div style="flex:.6;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--green);text-align:center;">1ª q.</div>
+        <div style="flex:.6;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);text-align:center;">2ª q.</div>
+      </div>`;
+    pecasComparativo.forEach(p=>{
+      const v1=q1.porPeca[p.id]||0,v2=q2.porPeca[p.id]||0;
+      html+=`<div style="display:flex;gap:0;padding:5px 2px;border-bottom:0.5px solid var(--border);align-items:center;">
+        <div style="flex:1.6;font-size:12px;color:var(--text);">${p.nome}</div>
+        <div style="flex:.6;font-size:12px;font-weight:600;color:var(--green);text-align:center;">${v1}</div>
+        <div style="flex:.6;font-size:12px;font-weight:600;color:var(--blue);text-align:center;">${v2}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  return html;
+}
+
+function renderModal(){
+  if(S.modal==='nova'){
+    const f=S._nf||{};
+    return`<div class="modal-wrap"><div class="modal">
+      <h3>Nova coleta</h3>
+      <span class="form-label">Data</span>
+      <input class="input-field" type="date" value="${f.data||today()}" onchange="S._nf.data=this.value">
+      <span class="form-label">Tipo</span>
+      <select class="input-field" onchange="S._nf.periodo=this.value">
+        <option value="retirada" ${f.periodo==='retirada'?'selected':''}>Retirada (envio de sujas)</option>
+        <option value="entrega" ${f.periodo==='entrega'?'selected':''}>Entrega (recebimento de limpas)</option>
+      </select>
+      <span class="form-label">Quinzena</span>
+      <select class="input-field" onchange="S._nf.turno=this.value">
+        <option value="1" ${f.turno==='1'?'selected':''}>1ª quinzena</option>
+        <option value="2" ${f.turno==='2'?'selected':''}>2ª quinzena</option>
+      </select>
+      <div class="mactions" style="margin-top:18px;">
+        <button onclick="S.modal=null;render()">Cancelar</button>
+        <button class="btn-confirm" onclick="confirmNova()">Iniciar</button>
+      </div>
+    </div></div>`;
+  }
+  if(S.modal==='confirm_unidade'){
+    const col=getCol(),u=S._cu;
+    const pecas=totalPU(col.nomade,u),valor=PECAS.reduce((s,p)=>s+(col.nomade[u][p.id]||0)*getPreco(col.fornecedorId||'izabel',p.id),0);
+    return`<div class="modal-wrap"><div class="modal">
+      <h3>Confirmar envio — ${u}</h3>
+      <p>${pecas} peças · ${fmtM(valor)}<br>Após confirmar, use o botão "Editar" se precisar corrigir.</p>
+      <div class="mactions">
+        <button onclick="S.modal=null;render()">Voltar</button>
+        <button class="btn-confirm" onclick="confirmarUnidade()">Confirmar</button>
+      </div>
+    </div></div>`;
+  }
+  if(S.modal==='confirm_forn'){
+    const col=getCol();
+    return`<div class="modal-wrap"><div class="modal">
+      <h3>Confirmar conferência — ${S._cu}</h3>
+      <p>${totalPU(col.fornecedor,S._cu)} peças conferidas em ${S._cu}.<br>Você pode editar depois se necessário.</p>
+      <div class="mactions">
+        <button onclick="S.modal=null;render()">Voltar</button>
+        <button class="btn-confirm" onclick="confirmarForn()">Confirmar</button>
+      </div>
+    </div></div>`;
+  }
+  if(S.modal==='assinar_n')
+    return`<div class="modal-wrap"><div class="modal">
+      <h3>Confirmação — Nômade</h3><p>Informe o nome de quem está confirmando pela Nômade.</p>
+      <input class="input-field" type="text" placeholder="Nome completo" oninput="S._ai=this.value" autofocus>
+      <div class="mactions" style="margin-top:14px;">
+        <button onclick="S.modal=null;render()">Cancelar</button>
+        <button class="btn-confirm" onclick="confirmarAssinarN()">Confirmar</button>
+      </div>
+    </div></div>`;
+  if(S.modal==='assinar_f')
+    return`<div class="modal-wrap"><div class="modal">
+      <h3>Confirmação — Fornecedor</h3><p>Informe o nome de quem está confirmando pelo fornecedor.</p>
+      <input class="input-field" type="text" placeholder="Nome completo" oninput="S._ai=this.value" autofocus>
+      <div class="mactions" style="margin-top:14px;">
+        <button onclick="S.modal=null;render()">Cancelar</button>
+        <button class="btn-confirm" onclick="confirmarAssinarF()">Confirmar</button>
+      </div>
+    </div></div>`;
+  if(S.modal==='confirmar_excluir'){
+    const col=S.coletas.find(c=>c.id===S._excluirId);
+    return`<div class="modal-wrap"><div class="modal">
+      <h3>Excluir registro?</h3>
+      <p>O registro de ${col?fmtDate(col.data):''} será excluído permanentemente. Esta ação não pode ser desfeita.</p>
+      <div class="mactions">
+        <button onclick="S.modal=null;render()">Cancelar</button>
+        <button class="btn-warn" onclick="confirmarExcluir()">Excluir</button>
+      </div>
+    </div></div>`;
+  }
+  return'';
+}
+
+render();
+
+// Start app
+window.addEventListener('DOMContentLoaded', function(){
+  initFirebase();
+});
+</script>
+</body>
+</html>
